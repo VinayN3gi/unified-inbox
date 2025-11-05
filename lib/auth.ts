@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { prisma } from "@/lib/prisma"; // ✅ Use the shared instance
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 interface ValidatePasswordParams {

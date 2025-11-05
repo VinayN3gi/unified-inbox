@@ -1,14 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signupUser } from "@/lib/auth-client";
+import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -16,7 +18,6 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       await signupUser(email, password, name);
       router.push("/login");
@@ -28,77 +29,130 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="flex flex-col md:flex-row min-h-screen">
-      {/* Left side - Hero */}
-      <div className="flex-1 bg-linear-to-br from-teal-500 to-green-600 text-white flex flex-col justify-center p-12">
-        <h1 className="text-4xl font-bold mb-4">Join Unified Mail</h1>
-        <p className="text-lg opacity-90 leading-relaxed">
-          One inbox for all your communication channels. Collaborate and reply
-          faster with your entire team.
+    <main className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gray-50">
+      {/* Animated gradient blobs */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[400px] h-[400px] bg-teal-400 rounded-full blur-[120px] opacity-50 animate-pulse" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] bg-green-500 rounded-full blur-[120px] opacity-50 animate-pulse delay-700" />
+      </div>
+
+      {/* Header */}
+      <div className="absolute top-8 left-10 flex items-center gap-2">
+        <div className="bg-linear-to-tr from-green-600 to-teal-500 p-2 rounded-lg">
+          <Mail className="text-white" size={22} />
+        </div>
+        <span className="text-xl font-semibold text-gray-800">
+          Unified Mail
+        </span>
+      </div>
+
+      {/* Signup form */}
+      <form
+        onSubmit={handleSignup}
+        className="w-full max-w-md p-8 flex flex-col gap-6 animate-fadeIn"
+      >
+        <h1 className="text-4xl font-bold text-gray-800 text-center mb-2">
+          Create your account
+        </h1>
+        <p className="text-gray-500 text-center mb-4">
+          Manage all messages from one place — fast, connected, and secure.
         </p>
-      </div>
 
-      {/* Right side - Signup Form */}
-      <div className="flex-1 flex flex-col justify-center px-10 md:px-20 bg-gray-50">
-        <form onSubmit={handleSignup} className="w-full max-w-lg mx-auto">
-          <h2 className="text-3xl font-semibold mb-8 text-gray-800">
-            Create Account
-          </h2>
+        {/* Name */}
+        <div className="relative">
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="peer w-full border-b border-gray-300 focus:border-teal-600 bg-transparent outline-none py-3 text-gray-800"
+            required
+          />
+          <label
+            htmlFor="name"
+            className="absolute left-0 top-3 text-gray-500 text-sm transition-all peer-focus:-top-4 peer-focus:text-xs peer-valid:-top-4 peer-valid:text-xs"
+          >
+            Full name
+          </label>
+        </div>
 
-          <div className="flex flex-col gap-4">
-            <input
-              type="text"
-              placeholder="Full name"
-              className="border-b border-gray-300 focus:border-green-600 outline-none py-3 bg-transparent text-gray-800"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+        {/* Email */}
+        <div className="relative">
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="peer w-full border-b border-gray-300 focus:border-teal-600 bg-transparent outline-none py-3 text-gray-800"
+            required
+          />
+          <label
+            htmlFor="email"
+            className="absolute left-0 top-3 text-gray-500 text-sm transition-all peer-focus:-top-4 peer-focus:text-xs peer-valid:-top-4 peer-valid:text-xs"
+          >
+            Email address
+          </label>
+        </div>
 
-            <input
-              type="email"
-              placeholder="Email address"
-              className="border-b border-gray-300 focus:border-green-600 outline-none py-3 bg-transparent text-gray-800"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        {/* Password */}
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="peer w-full border-b border-gray-300 focus:border-teal-600 bg-transparent outline-none py-3 text-gray-800 pr-10"
+            required
+          />
+          <label
+            htmlFor="password"
+            className="absolute left-0 top-3 text-gray-500 text-sm transition-all peer-focus:-top-4 peer-focus:text-xs peer-valid:-top-4 peer-valid:text-xs"
+          >
+            Password
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
 
-            <input
-              type="password"
-              placeholder="Password"
-              className="border-b border-gray-300 focus:border-green-600 outline-none py-3 bg-transparent text-gray-800"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className={`mt-4 py-3 rounded-full text-white font-medium flex items-center justify-center gap-2 transition-all duration-300 ${
+            loading
+              ? "bg-teal-400 cursor-not-allowed"
+              : "bg-linear-to-r from-green-600 to-teal-600 hover:shadow-lg hover:shadow-teal-200"
+          }`}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={20} />
+              Signing up...
+            </>
+          ) : (
+            "Create Account"
+          )}
+        </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`mt-6 py-3 rounded text-white font-medium transition ${
-                loading
-                  ? "bg-green-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-            >
-              {loading ? "Creating Account..." : "Sign Up"}
-            </button>
+        {error && (
+          <p className="text-red-500 mt-2 text-sm text-center">{error}</p>
+        )}
 
-            {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
-
-            <p className="text-sm mt-4 text-gray-600">
-              Already have an account?{" "}
-              <span
-                onClick={() => router.push("/login")}
-                className="text-green-600 hover:underline cursor-pointer"
-              >
-                Log in
-              </span>
-            </p>
-          </div>
-        </form>
-      </div>
+        <p className="text-sm mt-6 text-center text-gray-600">
+          Already have an account?{" "}
+          <span
+            onClick={() => router.push("/login")}
+            className="text-teal-600 hover:underline cursor-pointer font-medium"
+          >
+            Log in
+          </span>
+        </p>
+      </form>
     </main>
   );
 }
