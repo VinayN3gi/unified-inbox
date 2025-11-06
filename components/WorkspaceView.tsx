@@ -1,8 +1,8 @@
 "use client";
-
 import { useEffect, useState } from "react";
+import socket from "@/lib/socket"; 
 import ChatWindow from "@/components/ChatWindow";
-import Sidebar from "@/components/Sidebar"
+import Sidebar from "@/components/Sidebar";
 import ContactInfoPanel from "@/components/ContactInfoPanel";
 
 export default function WorkspaceView() {
@@ -14,7 +14,14 @@ export default function WorkspaceView() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
-  // Fetch contacts
+  // Initialize Socket.IO server on mount
+  useEffect(() => {
+    fetch("/api/socket")
+      .then((res) => res.json())
+      .then((data) => console.log("🔌 Socket server status:", data))
+      .catch((err) => console.error("❌ Socket server init failed:", err));
+  }, []);
+
   useEffect(() => {
     const fetchContacts = async () => {
       try {
@@ -24,7 +31,7 @@ export default function WorkspaceView() {
         setContacts(data);
         if (data.length > 0) setActiveContact(data[0].id);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching contacts:", err);
       } finally {
         setLoadingContacts(false);
       }
@@ -32,9 +39,9 @@ export default function WorkspaceView() {
     fetchContacts();
   }, []);
 
-  // Fetch messages for active contact
   useEffect(() => {
     if (!activeContact) return;
+
     const fetchMessages = async () => {
       try {
         setLoadingMessages(true);
@@ -42,17 +49,31 @@ export default function WorkspaceView() {
         const data = await res.json();
         setMessages(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching messages:", err);
       } finally {
         setLoadingMessages(false);
       }
     };
+
     fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
+
+    // Join room for real-time updates
+    socket.emit("joinRoom", activeContact);
+
+    // Listen for new messages
+    const handleNewMessage = (msg: any) => {
+      if (msg.contactId === activeContact) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
   }, [activeContact]);
 
-  // Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeContact || loading) return;
     setLoading(true);
@@ -63,15 +84,22 @@ export default function WorkspaceView() {
         body: JSON.stringify({ contactId: activeContact, body: newMessage }),
       });
       const result = await res.json();
+
       if (result.success) {
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now(), text: newMessage, incoming: false },
-        ]);
+        const msg = {
+          id: Date.now(),
+          contactId: activeContact,
+          body: newMessage,
+          direction: "OUTBOUND",
+          incoming: false,
+        };
+
+        setMessages((prev) => [...prev, msg]);
+        socket.emit("sendMessage", msg);
         setNewMessage("");
       }
     } catch (e) {
-      console.error(e);
+      console.error("Error sending message:", e);
     } finally {
       setLoading(false);
     }
@@ -86,7 +114,6 @@ export default function WorkspaceView() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-teal-500 rounded-full blur-[160px] opacity-30" />
       </div>
 
-      {/* Layout */}
       <Sidebar
         contacts={contacts}
         activeContact={activeContact}
