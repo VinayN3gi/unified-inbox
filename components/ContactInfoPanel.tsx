@@ -114,7 +114,7 @@ export default function ContactInfoPanel({ activeContact }: ContactInfoPanelProp
   };
 
   return (
-    <aside className="hidden lg:flex w-[300px] border-l border-green-100 bg-white/60 backdrop-blur-xl p-6 flex-col">
+    <aside className="flex w-[300px] border-l border-green-100 bg-white/60 backdrop-blur-xl p-6 flex-col">
       <div className="text-center mb-5">
         <div className="w-20 h-20 mx-auto rounded-full bg-linear-to-tr from-green-300 to-teal-300 flex items-center justify-center text-2xl font-semibold text-green-800 shadow-md">
           {activeContact?.name

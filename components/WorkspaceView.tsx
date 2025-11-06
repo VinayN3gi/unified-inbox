@@ -14,7 +14,7 @@ export default function WorkspaceView() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
-  // ✅ Fetch contacts
+  // Fetch contacts
   useEffect(() => {
     const fetchContacts = async () => {
       try {
@@ -32,7 +32,7 @@ export default function WorkspaceView() {
     fetchContacts();
   }, []);
 
-  // ✅ Fetch messages + join socket room
+  // Fetch messages + join socket room
   useEffect(() => {
     if (!activeContact) return;
 
@@ -50,7 +50,6 @@ export default function WorkspaceView() {
     };
 
     fetchMessages();
-
     socket.emit("joinRoom", activeContact);
 
     const handleNewMessage = (msg: any) => {
@@ -67,7 +66,7 @@ export default function WorkspaceView() {
     };
   }, [activeContact]);
 
-  // ✅ Send message
+  // Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeContact || loading) return;
     setLoading(true);
@@ -101,17 +100,24 @@ export default function WorkspaceView() {
 
   return (
     <div className="relative flex h-screen bg-linear-to-br from-green-50 via-white to-teal-50 text-gray-800 overflow-hidden">
+      {/* background blobs */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-green-400 rounded-full blur-[160px] opacity-30" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-teal-500 rounded-full blur-[160px] opacity-30" />
       </div>
 
-      <Sidebar
-        contacts={contacts}
-        activeContact={activeContact}
-        setActiveContact={setActiveContact}
-        loadingContacts={loadingContacts}
-      />
+      {/* layout: use responsive show/hide but keep DOM order predictable */}
+      {/* Sidebar: HIDDEN on small screens, visible on lg+ */}
+      <div className="hidden lg:block">
+        <Sidebar
+          contacts={contacts}
+          activeContact={activeContact}
+          setActiveContact={setActiveContact}
+          loadingContacts={loadingContacts}
+        />
+      </div>
+
+      {/* Chat: always visible and takes available space */}
       <ChatWindow
         messages={messages}
         activeContact={active}
@@ -121,7 +127,11 @@ export default function WorkspaceView() {
         loading={loading}
         loadingMessages={loadingMessages}
       />
-      <ContactInfoPanel activeContact={active} />
+
+      {/* ContactInfoPanel: VISIBLE on all sizes (we control its internal class separately) */}
+      <div className="block lg:block">
+        <ContactInfoPanel activeContact={active} />
+      </div>
     </div>
   );
 }
