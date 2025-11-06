@@ -9,7 +9,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
   },
   path: "/socket.io",
 });
@@ -33,28 +33,31 @@ io.on("connection", (socket: Socket) => {
     console.log(`📤 Message sent to room: ${msg.contactId}`);
   });
 
+  socket.on("addNote", (note: any) => {
+    if (note?.contactId) {
+      io.to(note.contactId).emit("newNote", note);
+      console.log(`📝 Note added for contact: ${note.contactId}`);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ Disconnected:", socket.id);
   });
 });
 
 
-
-// HTTP endpoint to emit events (for webhooks)
 app.post("/emit", (req: Request<{}, {}, EmitRequest>, res: Response) => {
   const { room, event, data } = req.body;
-  
   if (!room || !event || !data) {
     return res.status(400).json({ error: "Missing room, event, or data" });
   }
 
   io.to(room).emit(event, data);
   console.log(`📡 Emitted ${event} to room ${room}`);
-  
   res.json({ success: true });
 });
 
-// Health check
+
 app.get("/health", (req: Request, res: Response) => {
   res.json({ status: "ok", clients: io.engine.clientsCount });
 });

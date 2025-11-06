@@ -14,14 +14,6 @@ export default function WorkspaceView() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
-  // ✅ Initialize Socket.IO server on mount
-  useEffect(() => {
-    fetch("/api/socket")
-      .then((res) => res.json())
-      .then((data) => console.log("🔌 Socket server status:", data))
-      .catch((err) => console.error("❌ Socket server init failed:", err));
-  }, []);
-
   // ✅ Fetch contacts
   useEffect(() => {
     const fetchContacts = async () => {
@@ -59,27 +51,23 @@ export default function WorkspaceView() {
 
     fetchMessages();
 
-    // Join contact room
     socket.emit("joinRoom", activeContact);
 
-    // ✅ Listen for new messages (with duplicate guard)
     const handleNewMessage = (msg: any) => {
       if (msg.contactId !== activeContact) return;
       setMessages((prev) => {
-        // prevent duplicates
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
     };
 
     socket.on("newMessage", handleNewMessage);
-
     return () => {
       socket.off("newMessage", handleNewMessage);
     };
   }, [activeContact]);
 
-  // ✅ Send message (no duplicate add)
+  // ✅ Send message
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeContact || loading) return;
     setLoading(true);
@@ -89,19 +77,16 @@ export default function WorkspaceView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contactId: activeContact, body: newMessage }),
       });
-
       const result = await res.json();
 
       if (result.success) {
         const msg = {
-          id: result.message?.id ?? Date.now(), // use DB id if available
+          id: result.message?.id ?? Date.now(),
           contactId: activeContact,
           body: newMessage,
           direction: "OUTBOUND",
           incoming: false,
         };
-
-        // 🚫 Don’t add locally — let socket handle it
         socket.emit("sendMessage", msg);
         setNewMessage("");
       }
