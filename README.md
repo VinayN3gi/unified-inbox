@@ -182,7 +182,7 @@ UNIFIED-INBOX/
 ##  Demo Video
 ▶️ **Online Demo**
 
-[🎥 Click here to watch the full demo](https://www.loom.com/share/INSERT_VIDEO_LINK_HERE)
+[🎥 Click here to watch the full demo](https://www.loom.com/share/bac1c15fe1864cf59a817a2082bdad15)
 
 ## 👨‍💻 Author
 **Vinay Negi**
