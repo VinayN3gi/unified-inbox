@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import socket from "@/lib/socket"; 
+import socket from "@/lib/socket";
 import ChatWindow from "@/components/ChatWindow";
 import Sidebar from "@/components/Sidebar";
 import ContactInfoPanel from "@/components/ContactInfoPanel";
@@ -14,7 +14,7 @@ export default function WorkspaceView() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
-  // Initialize Socket.IO server on mount
+  // ✅ Initialize Socket.IO server on mount
   useEffect(() => {
     fetch("/api/socket")
       .then((res) => res.json())
@@ -22,6 +22,7 @@ export default function WorkspaceView() {
       .catch((err) => console.error("❌ Socket server init failed:", err));
   }, []);
 
+  // ✅ Fetch contacts
   useEffect(() => {
     const fetchContacts = async () => {
       try {
@@ -39,6 +40,7 @@ export default function WorkspaceView() {
     fetchContacts();
   }, []);
 
+  // ✅ Fetch messages + join socket room
   useEffect(() => {
     if (!activeContact) return;
 
@@ -57,14 +59,17 @@ export default function WorkspaceView() {
 
     fetchMessages();
 
-    // Join room for real-time updates
+    // Join contact room
     socket.emit("joinRoom", activeContact);
 
-    // Listen for new messages
+    // ✅ Listen for new messages (with duplicate guard)
     const handleNewMessage = (msg: any) => {
-      if (msg.contactId === activeContact) {
-        setMessages((prev) => [...prev, msg]);
-      }
+      if (msg.contactId !== activeContact) return;
+      setMessages((prev) => {
+        // prevent duplicates
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
     };
 
     socket.on("newMessage", handleNewMessage);
@@ -74,6 +79,7 @@ export default function WorkspaceView() {
     };
   }, [activeContact]);
 
+  // ✅ Send message (no duplicate add)
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !activeContact || loading) return;
     setLoading(true);
@@ -83,18 +89,19 @@ export default function WorkspaceView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contactId: activeContact, body: newMessage }),
       });
+
       const result = await res.json();
 
       if (result.success) {
         const msg = {
-          id: Date.now(),
+          id: result.message?.id ?? Date.now(), // use DB id if available
           contactId: activeContact,
           body: newMessage,
           direction: "OUTBOUND",
           incoming: false,
         };
 
-        setMessages((prev) => [...prev, msg]);
+        // 🚫 Don’t add locally — let socket handle it
         socket.emit("sendMessage", msg);
         setNewMessage("");
       }
