@@ -1,4 +1,3 @@
-// /lib/twilio.ts
 import twilio from "twilio";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID!;
@@ -19,25 +18,21 @@ export const TwilioClient = {
     mediaUrl?: string;
     channel: ChannelType;
   }) => {
-    try {
-      const from =
-        channel === "WHATSAPP"
-          ? process.env.TWILIO_WHATSAPP_NUMBER
-          : process.env.TWILIO_PHONE_NUMBER;
+    const from =
+      channel === "WHATSAPP"
+        ? process.env.TWILIO_WHATSAPP_NUMBER
+        : process.env.TWILIO_PHONE_NUMBER;
 
-      if (!from) throw new Error(`Missing FROM number for ${channel}`);
+    const formattedTo =
+      channel === "WHATSAPP" ? `whatsapp:${to}` : to;
 
-      const message = await client.messages.create({
-        from,
-        to: channel === "WHATSAPP" ? `whatsapp:${to}` : to,
-        body,
-        ...(mediaUrl ? { mediaUrl: [mediaUrl] } : {}),
-      });
+    const message = await client.messages.create({
+      from,
+      to: formattedTo,
+      body,
+      ...(mediaUrl ? { mediaUrl: [mediaUrl] } : {}),
+    });
 
-      return message;
-    } catch (error: any) {
-      console.error("❌ Twilio send error:", error.message);
-      throw new Error(error.message);
-    }
+    return message;
   },
 };
