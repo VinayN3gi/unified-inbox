@@ -134,6 +134,16 @@ erDiagram
     Contact ||--o{ Note : "has notes"
 ```
 
+---
+## Screenshots
+
+![Screenshot 1](public/images/AC1.png) ![Screenshot 2](public/images/AC2.png) 
+![Screenshot 3](public/images/AC3.png) ![Screenshot 4](public/images/AC4.png) 
+![Screenshot 5](public/images/AC5.png) |
+
+---
+
+
 ## Integration Comparison Table
 | Channel | Latency | Cost (USD/msg) | Reliability | Notes |
 |---|---|---|---|---|
